@@ -1,3 +1,25 @@
-# pixi environments
+# Local environments
+.venv/
 .pixi/*
 !.pixi/config.toml
+
+# Python cache and tooling
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.python-version
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.so
+
+# Local config and OS noise
+.env
+.env.*
+.DS_Store
