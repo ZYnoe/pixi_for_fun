@@ -1,0 +1,7 @@
+c_hello.c
+pyproject.toml
+src/c_hello/__init__.py
+src/pixi_hello.egg-info/PKG-INFO
+src/pixi_hello.egg-info/SOURCES.txt
+src/pixi_hello.egg-info/dependency_links.txt
+src/pixi_hello.egg-info/top_level.txt
