@@ -9,9 +9,9 @@
 - `pixi.toml`：管理开发环境、任务、平台和本地可编辑依赖
 - `pixi.lock`：锁定环境版本，方便别人复现
 - `pyproject.toml`：描述 Python 包和构建方式
-- `c_hello.c`：C 扩展源码
-- `src/c_hello/`：Python 包入口
-- `demo.py`：最简单的演示脚本
+- `src/c_hello/_c_hello.c`：C 扩展源码
+- `src/c_hello/__init__.py`：Python 包入口，把 C 扩展里的函数暴露出来
+- `scripts/demo.py`：最简单的演示脚本
 
 ## 快速开始
 
@@ -54,7 +54,7 @@ pixi run hello
 
 ```bash
 pixi shell
-python demo.py
+python scripts/demo.py
 ```
 
 ## 这个项目为什么这样组织
@@ -80,14 +80,14 @@ python demo.py
 [workspace]
 name = "pixi-hello"
 channels = ["conda-forge"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
 ```
 
 这里告诉 Pixi：
 
 - 项目名是什么
 - 依赖从哪个 channel 拉
-- 这个锁文件当前主要为哪个平台生成
+- 锁文件要为哪些平台生成（这里覆盖了主流的 macOS/Linux/Windows 桌面平台，方便别人在不同机器上直接复现）
 
 ### 2. Conda 依赖
 
@@ -96,7 +96,6 @@ platforms = ["osx-arm64"]
 python = ">=3.12,<3.13"
 pip = "*"
 setuptools = "*"
-wheel = "*"
 c-compiler = "*"
 ```
 
@@ -104,7 +103,8 @@ c-compiler = "*"
 
 - `python`：解释器版本
 - `c-compiler`：编译 C 扩展时需要
-- `setuptools` / `wheel`：构建 Python 包时需要
+- `setuptools`：构建 Python 包时需要
+- `pip`：Pixi 自己装 PyPI 包用的是内置的 uv，不需要 pip；但下面的 `rebuild` 任务里会手动调 `pip install` 触发 C 扩展重编译，所以这里把 pip 留着。`wheel` 不再显式列——现代 setuptools 不需要。
 
 ### 3. PyPI / 本地源码依赖
 
@@ -119,7 +119,8 @@ pixi-hello = { path = ".", editable = true }
 
 ```toml
 [tasks]
-hello = "python demo.py"
+hello = "python scripts/demo.py"
+rebuild = "pip install -e . --no-deps --force-reinstall --no-build-isolation"
 ```
 
 以后只需要：
@@ -129,6 +130,8 @@ pixi run hello
 ```
 
 不用每次都先手动激活环境再找命令。
+
+> 关于 `rebuild`：setuptools 的 editable 安装**不会自动重编译 C 扩展**。改完 `.c` 文件后，记得先 `pixi run rebuild` 触发重新构建，否则 `pixi run hello` 还在跑旧的 `.so`。
 
 ## 简单教程：怎么用 Pixi 管这种项目
 
@@ -147,7 +150,7 @@ pixi init
 比如这个项目，我们会先加：
 
 ```bash
-pixi add python=3.12 pip setuptools wheel c-compiler
+pixi add python=3.12 pip setuptools c-compiler
 ```
 
 这类依赖适合放进 Pixi，因为它们更像“开发和构建环境”的组成部分，而不只是运行时代码库。
@@ -181,7 +184,7 @@ your-project = { path = ".", editable = true }
 
 ```toml
 [tasks]
-dev = "python demo.py"
+dev = "python scripts/demo.py"
 test = "pytest"
 lint = "ruff check ."
 fmt = "ruff format ."
@@ -237,9 +240,10 @@ pixi shell
 
 1. 改 `pixi.toml` 管环境和任务
 2. 改 `pyproject.toml` 管打包和构建
-3. 跑 `pixi run ...` 验证功能
-4. 提交 `pixi.toml`、`pixi.lock`、`pyproject.toml` 和源码
-5. 不提交 `.pixi/`、`.venv/`、`__pycache__/`、`*.so`、`*.egg-info/`
+3. 改完 C 代码后跑一次 `pixi run rebuild`，让 `.so` 重新编译
+4. 跑 `pixi run ...` 验证功能
+5. 提交 `pixi.toml`、`pixi.lock`、`pyproject.toml` 和源码
+6. 不提交 `.pixi/`、`.venv/`、`__pycache__/`、`*.so`、`*.egg-info/`、`uv.lock`
 
 ## 常见命令备忘
 
@@ -251,7 +255,7 @@ pixi install
 pixi run hello
 
 # 直接在环境里执行命令
-pixi run python demo.py
+pixi run python scripts/demo.py
 
 # 进入 shell
 pixi shell

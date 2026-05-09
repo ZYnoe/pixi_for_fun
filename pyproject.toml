@@ -22,4 +22,4 @@ include = ["c_hello"]
 
 [[tool.setuptools.ext-modules]]
 name = "c_hello._c_hello"
-sources = ["c_hello.c"]
+sources = ["src/c_hello/_c_hello.c"]
