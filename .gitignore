@@ -2,6 +2,7 @@
 .venv/
 .pixi/*
 !.pixi/config.toml
+uv.lock
 
 # Python cache and tooling
 __pycache__/
