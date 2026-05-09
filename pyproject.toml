@@ -1,15 +1,24 @@
 [project]
 name = "pixi-hello"
 version = "0.1.0"
+description = "A minimal Pixi-managed Python package with a C extension."
+readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+  { name = "zylu", email = "luzeyu3077@gmail.com" },
+]
+dependencies = []
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["c_hello"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["c_hello"]
 
 [[tool.setuptools.ext-modules]]
 name = "c_hello._c_hello"
